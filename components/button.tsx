@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   ActivityIndicator,
@@ -9,6 +10,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { appleBlue, zincColors } from "@/constants/Colors";
+import { HapticFeedback } from "@/utils/haptics";
 
 type ButtonVariant = "filled" | "outline" | "ghost";
 type ButtonSize = "sm" | "md" | "lg";
@@ -89,9 +91,16 @@ export const Button: React.FC<ButtonProps> = ({
     }
   };
 
+  const handlePress = () => {
+    if (!disabled && !loading) {
+      HapticFeedback.light();
+      onPress?.();
+    }
+  };
+
   return (
     <Pressable
-      onPress={onPress}
+      onPress={handlePress}
       disabled={disabled || loading}
       style={[
         getVariantStyle(),

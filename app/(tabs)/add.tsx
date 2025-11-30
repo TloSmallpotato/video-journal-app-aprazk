@@ -4,6 +4,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from "react
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { IconSymbol } from "@/components/IconSymbol";
+import { HapticFeedback } from "@/utils/haptics";
 
 export default function AddScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
@@ -28,15 +29,18 @@ export default function AddScreen() {
 
     try {
       console.log('Starting video recording...');
+      HapticFeedback.medium();
       setIsRecording(true);
       const video = await cameraRef.current.recordAsync();
       console.log('Video recorded:', video);
       
       if (video && video.uri) {
+        HapticFeedback.success();
         Alert.alert('Success', `Video saved to: ${video.uri}`);
       }
     } catch (error) {
       console.error('Error recording video:', error);
+      HapticFeedback.error();
       Alert.alert('Error', 'Failed to record video');
     } finally {
       setIsRecording(false);
@@ -46,13 +50,20 @@ export default function AddScreen() {
   const stopRecording = () => {
     if (cameraRef.current && isRecording) {
       console.log('Stopping video recording...');
+      HapticFeedback.light();
       cameraRef.current.stopRecording();
       setIsRecording(false);
     }
   };
 
   const toggleCameraFacing = () => {
+    HapticFeedback.light();
     setFacing(current => (current === 'back' ? 'front' : 'back'));
+  };
+
+  const handlePermissionRequest = () => {
+    HapticFeedback.medium();
+    requestPermission();
   };
 
   if (!permission) {
@@ -70,7 +81,7 @@ export default function AddScreen() {
       <SafeAreaView style={[styles.safeArea, { backgroundColor: '#F5F1ED' }]} edges={['top']}>
         <View style={styles.container}>
           <Text style={styles.title}>Camera Permission Required</Text>
-          <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
+          <TouchableOpacity style={styles.permissionButton} onPress={handlePermissionRequest}>
             <Text style={styles.permissionButtonText}>Grant Permission</Text>
           </TouchableOpacity>
         </View>

@@ -14,6 +14,7 @@ import { useBiometricAuth } from '../contexts/BiometricAuthContext';
 import { router } from 'expo-router';
 import { IconSymbol } from '../components/IconSymbol';
 import { LinearGradient } from 'expo-linear-gradient';
+import { HapticFeedback } from '../utils/haptics';
 
 export default function AuthScreen() {
   const {
@@ -47,19 +48,27 @@ export default function AuthScreen() {
 
   const handleAuthenticate = async () => {
     console.log('handleAuthenticate called');
+    HapticFeedback.medium();
     setIsAuthenticating(true);
     setAuthError(null);
 
     const success = await authenticate();
 
     if (!success) {
+      HapticFeedback.error();
       setAuthError('Authentication failed. Please try again.');
       console.log('Authentication failed in handleAuthenticate');
     } else {
+      HapticFeedback.success();
       console.log('Authentication succeeded in handleAuthenticate');
     }
 
     setIsAuthenticating(false);
+  };
+
+  const handleSkip = () => {
+    HapticFeedback.light();
+    handleAuthenticate();
   };
 
   const getBiometricIcon = () => {
@@ -160,7 +169,7 @@ export default function AuthScreen() {
             {!isBiometricSupported || !isBiometricEnrolled ? (
               <TouchableOpacity
                 style={[styles.skipButton, isDark && styles.skipButtonDark]}
-                onPress={handleAuthenticate}
+                onPress={handleSkip}
               >
                 <Text style={[styles.skipButtonText, isDark && styles.skipButtonTextDark]}>
                   Continue without biometrics

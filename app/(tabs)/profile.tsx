@@ -5,6 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useBiometricAuth } from "../../contexts/BiometricAuthContext";
 import { IconSymbol } from "../../components/IconSymbol";
 import { router } from "expo-router";
+import { HapticFeedback } from "../../utils/haptics";
 
 export default function ProfileScreen() {
   const { logout, isBiometricSupported, isBiometricEnrolled } = useBiometricAuth();
@@ -12,7 +13,9 @@ export default function ProfileScreen() {
   const isDark = colorScheme === 'dark';
 
   const handleLogout = async () => {
+    HapticFeedback.medium();
     await logout();
+    HapticFeedback.success();
     router.replace('/auth');
   };
 

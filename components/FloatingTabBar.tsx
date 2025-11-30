@@ -20,6 +20,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { Href } from 'expo-router';
+import { HapticFeedback } from '@/utils/haptics';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -94,6 +95,7 @@ export default function FloatingTabBar({
   }, [activeTabIndex, animatedValue]);
 
   const handleTabPress = (route: Href) => {
+    HapticFeedback.selection();
     router.push(route);
   };
 
