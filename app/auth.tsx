@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Platform,
   useColorScheme,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useBiometricAuth } from '../contexts/BiometricAuthContext';
@@ -19,20 +20,33 @@ export default function AuthScreen() {
     isAuthenticated,
     isBiometricSupported,
     isBiometricEnrolled,
+    isLoading,
     authenticate,
   } = useBiometricAuth();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
+  // Automatically trigger authentication when the screen loads
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && !hasAttemptedAuth) {
+      console.log('Auto-triggering authentication on screen load');
+      setHasAttemptedAuth(true);
+      handleAuthenticate();
+    }
+  }, [isLoading, isAuthenticated, hasAttemptedAuth]);
+
   useEffect(() => {
     if (isAuthenticated) {
+      console.log('User authenticated, navigating to profile');
       router.replace('/(tabs)/profile');
     }
   }, [isAuthenticated]);
 
   const handleAuthenticate = async () => {
+    console.log('handleAuthenticate called');
     setIsAuthenticating(true);
     setAuthError(null);
 
@@ -40,6 +54,9 @@ export default function AuthScreen() {
 
     if (!success) {
       setAuthError('Authentication failed. Please try again.');
+      console.log('Authentication failed in handleAuthenticate');
+    } else {
+      console.log('Authentication succeeded in handleAuthenticate');
     }
 
     setIsAuthenticating(false);
@@ -64,6 +81,26 @@ export default function AuthScreen() {
     }
     return 'Authenticate with Fingerprint';
   };
+
+  if (isLoading) {
+    return (
+      <LinearGradient
+        colors={isDark ? ['#1a1a2e', '#16213e'] : ['#F5F1ED', '#E8E4DF']}
+        style={styles.gradient}
+      >
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+          <View style={styles.container}>
+            <View style={styles.content}>
+              <ActivityIndicator size="large" color={isDark ? '#FFFFFF' : '#2E2A8B'} />
+              <Text style={[styles.loadingText, isDark && styles.loadingTextDark]}>
+                Loading...
+              </Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      </LinearGradient>
+    );
+  }
 
   return (
     <LinearGradient
@@ -105,12 +142,16 @@ export default function AuthScreen() {
               onPress={handleAuthenticate}
               disabled={isAuthenticating}
             >
-              <IconSymbol
-                ios_icon_name={getBiometricIcon()}
-                android_material_icon_name={getBiometricIcon()}
-                size={24}
-                color="#FFFFFF"
-              />
+              {isAuthenticating ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <IconSymbol
+                  ios_icon_name={getBiometricIcon()}
+                  android_material_icon_name={getBiometricIcon()}
+                  size={24}
+                  color="#FFFFFF"
+                />
+              )}
               <Text style={styles.buttonText}>
                 {isAuthenticating ? 'Authenticating...' : 'Authenticate'}
               </Text>
@@ -155,6 +196,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#2E2A8B',
+  },
+  loadingTextDark: {
+    color: '#FFFFFF',
   },
   iconContainer: {
     marginBottom: 32,
