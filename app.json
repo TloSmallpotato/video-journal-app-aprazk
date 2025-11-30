@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Natively",
-    "slug": "Natively",
+    "name": "Video Journal",
+    "slug": "Video Journal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/natively-dark.png",
@@ -34,7 +34,15 @@
     "plugins": [
       "expo-font",
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for recording videos",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone for recording videos",
+          "recordAudioAndroid": true
+        }
+      ]
     ],
     "scheme": "natively",
     "experiments": {
@@ -43,5 +51,6 @@
     "extra": {
       "router": {}
     }
-  }
+  },
+  "scheme": "Video Journal"
 }

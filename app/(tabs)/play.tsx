@@ -3,14 +3,14 @@ import React from "react";
 import { View, Text, StyleSheet, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function ProfileScreen() {
+export default function PlayScreen() {
   return (
     <SafeAreaView 
       style={[styles.safeArea, { backgroundColor: '#F5F1ED' }]} 
       edges={['top']}
     >
       <View style={styles.container}>
-        <Text style={styles.title}>Profile</Text>
+        <Text style={styles.title}>Play</Text>
       </View>
     </SafeAreaView>
   );

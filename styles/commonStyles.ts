@@ -1,14 +1,15 @@
+
 import { StyleSheet, ViewStyle, TextStyle } from 'react-native';
 
 export const colors = {
-  primary: '#162456',    // Material Blue
-  secondary: '#193cb8',  // Darker Blue
-  accent: '#64B5F6',     // Light Blue
-  background: '#101824',  // Keeping dark background
-  backgroundAlt: '#162133',  // Keeping dark background
-  text: '#e3e3e3',       // Keeping light text
-  grey: '#90CAF9',       // Light Blue Grey
-  card: '#193cb8',       // Keeping dark card background
+  primary: '#2E2A8B',    // Deep purple/blue from design
+  secondary: '#FF6B35',  // Orange accent
+  accent: '#C8BFDB',     // Light purple for tab bar
+  background: '#F5F1ED', // Cream/beige background
+  backgroundAlt: '#FFFFFF',
+  text: '#2E2A8B',       // Dark purple text
+  grey: '#8E8E93',
+  card: '#FFFFFF',
 };
 
 export const buttonStyles = StyleSheet.create({
