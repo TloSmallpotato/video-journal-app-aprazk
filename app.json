@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Video Journal",
@@ -16,7 +17,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.Natively",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSFaceIDUsageDescription": "Allow Video Journal to use Face ID to authenticate and secure your videos."
       }
     },
     "android": {
@@ -41,6 +43,12 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera for recording videos",
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone for recording videos",
           "recordAudioAndroid": true
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Video Journal to use Face ID to authenticate and secure your videos."
         }
       ]
     ],

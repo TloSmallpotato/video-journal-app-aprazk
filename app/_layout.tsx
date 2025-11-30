@@ -4,8 +4,8 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import { ThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
+import { BiometricAuthProvider } from '../contexts/BiometricAuthContext';
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -16,18 +16,21 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="formsheet" options={{ presentation: 'formSheet' }} />
-        <Stack.Screen name="transparent-modal" options={{ presentation: 'transparentModal' }} />
-      </Stack>
-    </ThemeProvider>
+    <BiometricAuthProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+          }}
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="auth" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
+          <Stack.Screen name="formsheet" options={{ presentation: 'formSheet' }} />
+          <Stack.Screen name="transparent-modal" options={{ presentation: 'transparentModal' }} />
+        </Stack>
+      </ThemeProvider>
+    </BiometricAuthProvider>
   );
 }
