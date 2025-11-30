@@ -95,7 +95,7 @@ export default function FloatingTabBar({
   }, [activeTabIndex, animatedValue]);
 
   const handleTabPress = (route: Href) => {
-    HapticFeedback.selection();
+    HapticFeedback.heavy();
     router.push(route);
   };
 
