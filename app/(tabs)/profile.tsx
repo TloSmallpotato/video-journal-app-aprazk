@@ -19,6 +19,11 @@ export default function ProfileScreen() {
     router.replace('/auth');
   };
 
+  const handleNavigateToSearch = () => {
+    HapticFeedback.medium();
+    router.push('/search');
+  };
+
   return (
     <SafeAreaView 
       style={[styles.safeArea, { backgroundColor: isDark ? '#1a1a2e' : '#F5F1ED' }]} 
@@ -66,6 +71,19 @@ export default function ProfileScreen() {
             />
             <Text style={styles.logoutButtonText}>Lock App</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.searchButton, isDark && styles.searchButtonDark]}
+            onPress={handleNavigateToSearch}
+          >
+            <IconSymbol
+              ios_icon_name="magnifyingglass"
+              android_material_icon_name="search"
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.searchButtonText}>To Search Page</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
@@ -80,6 +98,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: Platform.OS === 'android' ? 48 : 20,
     paddingHorizontal: 24,
+    paddingBottom: 100,
   },
   title: {
     fontSize: 48,
@@ -159,6 +178,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A47A3',
   },
   logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  searchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#34C759',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  searchButtonDark: {
+    backgroundColor: '#2ECC71',
+  },
+  searchButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
