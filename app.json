@@ -1,8 +1,7 @@
-
 {
   "expo": {
-    "name": "video-journal",
-    "slug": "video-journal",
+    "name": "Video Journal",
+    "slug": "Video Journal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/final_quest_240x240.png",
@@ -58,5 +57,6 @@
         "projectId": "your-project-id"
       }
     }
-  }
+  },
+  "scheme": "Video Journal"
 }

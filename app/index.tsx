@@ -1,46 +1,28 @@
 
-import { useEffect } from "react";
-import { router } from "expo-router";
+import { Redirect } from "expo-router";
+import { Platform } from "react-native";
 import { useAuth } from "@/contexts/AuthContext";
-import * as SecureStore from "expo-secure-store";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
+import React from "react";
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { session, isLoading } = useAuth();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      if (loading) return;
+  if (isLoading) {
+    return null;
+  }
 
-      if (user) {
-        // User is logged in, check if biometric is enabled
-        const biometricEnabled = await SecureStore.getItemAsync("biometric_enabled");
-        if (biometricEnabled === "true") {
-          router.replace("/(auth)/biometric-lock");
-        } else {
-          router.replace("/(tabs)");
-        }
-      } else {
-        // No user, go to login
-        router.replace("/(auth)/login");
-      }
-    };
+  // On web, skip biometric lock and go straight to tabs or login
+  if (Platform.OS === 'web') {
+    if (session) {
+      return <Redirect href="/(tabs)/profile" />;
+    }
+    return <Redirect href="/(auth)/login" />;
+  }
 
-    checkAuth();
-  }, [user, loading]);
+  // On native platforms, use biometric lock if authenticated
+  if (session) {
+    return <Redirect href="/auth" />;
+  }
 
-  return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" color="#007AFF" />
-    </View>
-  );
+  return <Redirect href="/(auth)/login" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-});

@@ -2,130 +2,113 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
+import { Platform, Alert } from 'react-native';
 
 interface BiometricAuthContextType {
   isAuthenticated: boolean;
-  isBiometricSupported: boolean;
-  isBiometricEnrolled: boolean;
   isLoading: boolean;
+  hasAttemptedAuth: boolean;
   authenticate: () => Promise<boolean>;
-  logout: () => Promise<void>;
-  checkBiometricSupport: () => Promise<void>;
+  isBiometricAvailable: boolean;
+  biometricType: string | null;
 }
 
 const BiometricAuthContext = createContext<BiometricAuthContextType | undefined>(undefined);
 
-const SESSION_KEY = 'biometric_session';
-
 export function BiometricAuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isBiometricSupported, setIsBiometricSupported] = useState(false);
-  const [isBiometricEnrolled, setIsBiometricEnrolled] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
+  const [isBiometricAvailable, setIsBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState<string | null>(null);
 
-  const checkBiometricSupport = async () => {
+  useEffect(() => {
+    checkBiometricAvailability();
+  }, []);
+
+  const checkBiometricAvailability = async () => {
+    // Biometrics not available on web
+    if (Platform.OS === 'web') {
+      setIsBiometricAvailable(false);
+      return;
+    }
+
     try {
       const compatible = await LocalAuthentication.hasHardwareAsync();
-      setIsBiometricSupported(compatible);
-      console.log('Biometric hardware available:', compatible);
+      const enrolled = await LocalAuthentication.isEnrolledAsync();
+      const available = compatible && enrolled;
+      
+      setIsBiometricAvailable(available);
 
-      if (compatible) {
-        const enrolled = await LocalAuthentication.isEnrolledAsync();
-        setIsBiometricEnrolled(enrolled);
-        console.log('Biometric enrolled:', enrolled);
-
+      if (available) {
         const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-        console.log('Supported authentication types:', types);
+        if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) {
+          setBiometricType('Face ID');
+        } else if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) {
+          setBiometricType('Touch ID');
+        } else {
+          setBiometricType('Biometric');
+        }
       }
     } catch (error) {
-      console.error('Error checking biometric support:', error);
-      setIsBiometricSupported(false);
-      setIsBiometricEnrolled(false);
-    }
-  };
-
-  const checkExistingSession = async () => {
-    try {
-      const session = await SecureStore.getItemAsync(SESSION_KEY);
-      if (session === 'authenticated') {
-        console.log('Found existing session');
-        setIsAuthenticated(true);
-      }
-    } catch (error) {
-      console.error('Error checking existing session:', error);
+      console.error('Error checking biometric availability:', error);
+      setIsBiometricAvailable(false);
     }
   };
 
   const authenticate = async (): Promise<boolean> => {
-    try {
-      // If biometrics are not available, allow access without authentication
-      if (!isBiometricSupported || !isBiometricEnrolled) {
-        console.log('Biometric not supported or not enrolled, allowing access without authentication');
-        setIsAuthenticated(true);
-        await SecureStore.setItemAsync(SESSION_KEY, 'authenticated');
-        return true;
-      }
+    // Skip biometric auth on web
+    if (Platform.OS === 'web') {
+      setIsAuthenticated(true);
+      setHasAttemptedAuth(true);
+      return true;
+    }
 
-      // Biometrics ARE available, so we MUST authenticate with Face ID/Touch ID
-      console.log('Biometrics available, triggering authentication...');
-      
+    if (!isBiometricAvailable) {
+      Alert.alert(
+        'Biometric Authentication Unavailable',
+        'Please set up Face ID or Touch ID in your device settings.'
+      );
+      return false;
+    }
+
+    setIsLoading(true);
+    setHasAttemptedAuth(true);
+
+    try {
       const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: 'Authenticate to access your Video Journal',
+        promptMessage: 'Authenticate to continue',
         fallbackLabel: 'Use Passcode',
-        cancelLabel: 'Cancel',
-        disableDeviceFallback: false, // Allow fallback to device passcode
+        disableDeviceFallback: false,
       });
 
-      console.log('Authentication result:', result);
-
       if (result.success) {
-        console.log('Authentication successful!');
         setIsAuthenticated(true);
-        await SecureStore.setItemAsync(SESSION_KEY, 'authenticated');
+        await SecureStore.setItemAsync('biometric_authenticated', 'true');
+        setIsLoading(false);
         return true;
       } else {
-        console.log('Authentication failed:', result.error);
         setIsAuthenticated(false);
+        setIsLoading(false);
         return false;
       }
     } catch (error) {
-      console.error('Authentication error:', error);
+      console.error('Biometric authentication error:', error);
       setIsAuthenticated(false);
+      setIsLoading(false);
       return false;
     }
   };
-
-  const logout = async () => {
-    try {
-      setIsAuthenticated(false);
-      await SecureStore.deleteItemAsync(SESSION_KEY);
-      console.log('Logged out successfully');
-    } catch (error) {
-      console.error('Error logging out:', error);
-    }
-  };
-
-  useEffect(() => {
-    const initialize = async () => {
-      setIsLoading(true);
-      await checkBiometricSupport();
-      await checkExistingSession();
-      setIsLoading(false);
-    };
-    
-    initialize();
-  }, []);
 
   return (
     <BiometricAuthContext.Provider
       value={{
         isAuthenticated,
-        isBiometricSupported,
-        isBiometricEnrolled,
         isLoading,
+        hasAttemptedAuth,
         authenticate,
-        logout,
-        checkBiometricSupport,
+        isBiometricAvailable,
+        biometricType,
       }}
     >
       {children}
