@@ -6,7 +6,7 @@ import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { SystemBars } from "react-native-edge-to-edge";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { useColorScheme, Alert, Platform } from "react-native";
+import { useColorScheme, Alert } from "react-native";
 import { useNetworkState } from "expo-network";
 import {
   DarkTheme,
@@ -90,16 +90,6 @@ export default function RootLayout() {
               <Stack>
                 {/* Main app with tabs */}
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
-                {/* Search screen */}
-                <Stack.Screen 
-                  name="search" 
-                  options={{ 
-                    headerShown: Platform.OS === 'ios',
-                    title: "Search",
-                    presentation: Platform.OS === 'ios' ? 'modal' : 'card'
-                  }} 
-                />
 
                 {/* Modal Demo Screens */}
                 <Stack.Screen

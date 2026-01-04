@@ -1,62 +1,73 @@
+
 {
   "expo": {
-    "name": "Video Journal",
-    "slug": "Video Journal",
+    "name": "Natively",
+    "slug": "Natively",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/final_quest_240x240.png",
-    "scheme": "video-journal",
+    "icon": "./assets/images/natively-dark.png",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/natively-dark.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.videojournal.app",
+      "bundleIdentifier": "com.anonymous.Natively",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "We use Face ID to securely unlock your video journal and protect your privacy",
-        "NSCameraUsageDescription": "We need access to your camera to record videos"
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSFaceIDUsageDescription": "We use Face ID to securely authenticate you and protect your data."
+      },
+      "entitlements": {
+        "aps-environment": "development",
+        "com.apple.developer.usernotifications.time-sensitive": true
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/final_quest_240x240.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/natively-dark.png",
+        "backgroundColor": "#000000"
       },
-      "package": "com.videojournal.app",
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.Natively",
       "permissions": [
         "USE_BIOMETRIC",
         "USE_FINGERPRINT",
-        "CAMERA",
-        "RECORD_AUDIO"
+        "POST_NOTIFICATIONS"
       ]
     },
     "web": {
-      "bundler": "metro",
-      "output": "static",
-      "favicon": "./assets/images/final_quest_240x240.png"
+      "favicon": "./assets/images/final_quest_240x240.png",
+      "bundler": "metro"
     },
     "plugins": [
+      "expo-font",
       "expo-router",
+      "expo-web-browser",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow Natively to use Face ID to authenticate you securely."
+        }
+      ],
       [
         "expo-notifications",
         {
-          "icon": "./assets/images/final_quest_240x240.png",
-          "color": "#ffffff"
+          "icon": "./assets/images/natively-dark.png",
+          "color": "#000000",
+          "sounds": []
         }
-      ],
-      "expo-secure-store",
-      "expo-local-authentication"
+      ]
     ],
+    "scheme": "natively",
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "router": {
-        "origin": false
-      },
-      "eas": {
-        "projectId": "your-project-id"
-      }
+      "router": {},
+      "backendUrl": "https://your-backend-url.com"
     }
-  },
-  "scheme": "Video Journal"
+  }
 }
