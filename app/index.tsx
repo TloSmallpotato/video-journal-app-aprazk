@@ -1,32 +1,46 @@
 
-import { Redirect } from 'expo-router';
-import { useBiometricAuth } from '../contexts/BiometricAuthContext';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { useEffect } from "react";
+import { router } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+import * as SecureStore from "expo-secure-store";
+import { View, ActivityIndicator, StyleSheet } from "react-native";
 
 export default function Index() {
-  const { isAuthenticated, isLoading } = useBiometricAuth();
+  const { user, loading } = useAuth();
 
-  // Show loading indicator while checking authentication status
-  if (isLoading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#2E2A8B" />
-      </View>
-    );
-  }
+  useEffect(() => {
+    const checkAuth = async () => {
+      if (loading) return;
 
-  if (isAuthenticated) {
-    return <Redirect href="/(tabs)/profile" />;
-  }
+      if (user) {
+        // User is logged in, check if biometric is enabled
+        const biometricEnabled = await SecureStore.getItemAsync("biometric_enabled");
+        if (biometricEnabled === "true") {
+          router.replace("/(auth)/biometric-lock");
+        } else {
+          router.replace("/(tabs)");
+        }
+      } else {
+        // No user, go to login
+        router.replace("/(auth)/login");
+      }
+    };
 
-  return <Redirect href="/auth" />;
+    checkAuth();
+  }, [user, loading]);
+
+  return (
+    <View style={styles.container}>
+      <ActivityIndicator size="large" color="#007AFF" />
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5F1ED',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
   },
 });

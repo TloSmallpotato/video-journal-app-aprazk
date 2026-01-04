@@ -1,22 +1,42 @@
 
 import React from "react";
-import { View, Text, StyleSheet, Platform, TouchableOpacity, useColorScheme } from "react-native";
+import { View, Text, StyleSheet, Platform, TouchableOpacity, useColorScheme, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useBiometricAuth } from "../../contexts/BiometricAuthContext";
-import { IconSymbol } from "../../components/IconSymbol";
+import { useAuth } from "@/contexts/AuthContext";
+import { IconSymbol } from "@/components/IconSymbol";
 import { router } from "expo-router";
-import { HapticFeedback } from "../../utils/haptics";
+import { HapticFeedback } from "@/utils/haptics";
+import * as SecureStore from "expo-secure-store";
 
 export default function ProfileScreen() {
-  const { logout, isBiometricSupported, isBiometricEnrolled } = useBiometricAuth();
+  const { user, signOut } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   const handleLogout = async () => {
-    HapticFeedback.medium();
-    await logout();
-    HapticFeedback.success();
-    router.replace('/auth');
+    Alert.alert(
+      "Sign Out",
+      "Are you sure you want to sign out?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Sign Out",
+          style: "destructive",
+          onPress: async () => {
+            await HapticFeedback.medium();
+            await signOut();
+            // Clear biometric settings
+            await SecureStore.deleteItemAsync("biometric_enabled");
+            await SecureStore.deleteItemAsync("user_email");
+            await HapticFeedback.success();
+            router.replace("/(auth)/login");
+          },
+        },
+      ]
+    );
   };
 
   const handleNavigateToSearch = () => {
@@ -33,6 +53,23 @@ export default function ProfileScreen() {
         <Text style={[styles.title, isDark && styles.titleDark]}>Profile</Text>
         
         <View style={styles.infoContainer}>
+          {user && (
+            <View style={[styles.infoCard, isDark && styles.infoCardDark]}>
+              <IconSymbol
+                ios_icon_name="person.circle.fill"
+                android_material_icon_name="account-circle"
+                size={64}
+                color={isDark ? '#4A47A3' : '#2E2A8B'}
+              />
+              <Text style={[styles.userName, isDark && styles.userNameDark]}>
+                {user.name || "User"}
+              </Text>
+              <Text style={[styles.userEmail, isDark && styles.userEmailDark]}>
+                {user.email}
+              </Text>
+            </View>
+          )}
+
           <View style={[styles.infoCard, isDark && styles.infoCardDark]}>
             <IconSymbol
               ios_icon_name="lock.shield.fill"
@@ -44,19 +81,17 @@ export default function ProfileScreen() {
               Biometric Security
             </Text>
             <Text style={[styles.infoText, isDark && styles.infoTextDark]}>
-              Status: {isBiometricSupported && isBiometricEnrolled ? 'Enabled' : 'Not Available'}
+              Face ID / Touch ID enabled for quick unlock
             </Text>
-            {isBiometricSupported && isBiometricEnrolled && (
-              <View style={styles.badge}>
-                <IconSymbol
-                  ios_icon_name="checkmark.circle.fill"
-                  android_material_icon_name="check_circle"
-                  size={16}
-                  color="#34C759"
-                />
-                <Text style={styles.badgeText}>Protected</Text>
-              </View>
-            )}
+            <View style={styles.badge}>
+              <IconSymbol
+                ios_icon_name="checkmark.circle.fill"
+                android_material_icon_name="check-circle"
+                size={16}
+                color="#34C759"
+              />
+              <Text style={styles.badgeText}>Protected</Text>
+            </View>
           </View>
 
           <TouchableOpacity
@@ -64,12 +99,12 @@ export default function ProfileScreen() {
             onPress={handleLogout}
           >
             <IconSymbol
-              ios_icon_name="lock.fill"
-              android_material_icon_name="lock"
+              ios_icon_name="arrow.right.square.fill"
+              android_material_icon_name="logout"
               size={20}
               color="#FFFFFF"
             />
-            <Text style={styles.logoutButtonText}>Lock App</Text>
+            <Text style={styles.logoutButtonText}>Sign Out</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -126,6 +161,23 @@ const styles = StyleSheet.create({
   infoCardDark: {
     backgroundColor: '#2a2a3e',
   },
+  userName: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#2E2A8B',
+    marginTop: 16,
+  },
+  userNameDark: {
+    color: '#FFFFFF',
+  },
+  userEmail: {
+    fontSize: 16,
+    color: '#666666',
+    marginTop: 4,
+  },
+  userEmailDark: {
+    color: '#CCCCCC',
+  },
   infoTitle: {
     fontSize: 20,
     fontWeight: '600',
@@ -163,7 +215,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#2E2A8B',
+    backgroundColor: '#FF3B30',
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 16,
@@ -175,7 +227,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   logoutButtonDark: {
-    backgroundColor: '#4A47A3',
+    backgroundColor: '#FF453A',
   },
   logoutButtonText: {
     color: '#FFFFFF',
