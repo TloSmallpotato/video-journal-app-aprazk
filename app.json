@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Video Journal",
@@ -48,6 +49,14 @@
         "expo-local-authentication",
         {
           "faceIDPermission": "Allow Video Journal to use Face ID to authenticate and secure your videos."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/natively-dark.png",
+          "color": "#FFD60A",
+          "defaultChannel": "default"
         }
       ]
     ],
