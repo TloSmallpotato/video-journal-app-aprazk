@@ -1,69 +1,21 @@
 
-import React, { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { View, Text, StyleSheet, TouchableOpacity, useColorScheme, ActivityIndicator } from "react-native";
-import { HapticFeedback } from "../utils/haptics";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as Notifications from 'expo-notifications';
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 40,
-  },
-  button: {
-    backgroundColor: '#FFD60A',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginVertical: 10,
-    width: '100%',
-    maxWidth: 300,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
-    textAlign: 'center',
-  },
-  statusText: {
-    fontSize: 14,
-    color: '#FFD60A',
-    marginTop: 20,
-    textAlign: 'center',
-  },
-  loader: {
-    marginLeft: 10,
-  },
-});
+import React, { useState } from "react";
+import { HapticFeedback } from "../utils/haptics";
 
 const NOTIFICATION_MESSAGES = [
   "💛 Celebrate the little moments that matter.",
   "New word? New book? New moment? Log it now!",
   "Every word counts! Log a new one today and watch them grow.",
-  "Time to capture today's tiny win! 💛  Add a new word, book, or magical moment.",
+  "Time to capture today's tiny win! 💛 Add a new word, book, or magical moment."
 ];
 
 export default function SearchScreen() {
   const colorScheme = useColorScheme();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingNow, setIsLoadingNow] = useState(false);
+  const [isLoadingDelayed, setIsLoadingDelayed] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
 
   const getRandomMessage = () => {
@@ -71,56 +23,51 @@ export default function SearchScreen() {
   };
 
   const triggerNotificationNow = async () => {
-    if (isLoading) return;
-    
     try {
-      setIsLoading(true);
+      setIsLoadingNow(true);
       setStatusMessage('');
       await HapticFeedback.medium();
       
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "✨ Moment Reminder",
+          title: "Natively",
           body: getRandomMessage(),
-          sound: true,
         },
-        trigger: null, // Immediate
+        trigger: null, // null means immediate
       });
       
       setStatusMessage('✅ Notification sent!');
       await HapticFeedback.success();
-      
       setTimeout(() => setStatusMessage(''), 3000);
     } catch (error) {
-      console.error('Error sending notification:', error);
+      console.error('Error scheduling notification:', error);
       setStatusMessage('❌ Failed to send notification');
       await HapticFeedback.error();
       setTimeout(() => setStatusMessage(''), 3000);
     } finally {
-      setIsLoading(false);
+      setIsLoadingNow(false);
     }
   };
 
   const triggerNotificationDelayed = async () => {
-    if (isLoading) return;
-    
     try {
-      setIsLoading(true);
+      setIsLoadingDelayed(true);
       setStatusMessage('');
       await HapticFeedback.medium();
       
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "✨ Moment Reminder",
+          title: "Natively",
           body: getRandomMessage(),
-          sound: true,
         },
-        trigger: { seconds: 5 },
+        trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: 5,
+        },
       });
       
-      setStatusMessage('⏰ Notification scheduled for 5 seconds!');
+      setStatusMessage('✅ Notification scheduled for 5s!');
       await HapticFeedback.success();
-      
       setTimeout(() => setStatusMessage(''), 3000);
     } catch (error) {
       console.error('Error scheduling notification:', error);
@@ -128,37 +75,74 @@ export default function SearchScreen() {
       await HapticFeedback.error();
       setTimeout(() => setStatusMessage(''), 3000);
     } finally {
-      setIsLoading(false);
+      setIsLoadingDelayed(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Search</Text>
-        
-        <TouchableOpacity 
-          style={[styles.button, isLoading && styles.buttonDisabled]}
-          onPress={triggerNotificationNow}
-          disabled={isLoading}
-        >
+    <SafeAreaView style={[styles.container, { backgroundColor: colorScheme === 'dark' ? '#000' : '#fff' }]}>
+      <Text style={[styles.title, { color: colorScheme === 'dark' ? '#fff' : '#000' }]}>Search</Text>
+      
+      {statusMessage ? (
+        <Text style={[styles.statusMessage, { color: colorScheme === 'dark' ? '#fff' : '#000' }]}>{statusMessage}</Text>
+      ) : null}
+
+      <TouchableOpacity
+        style={[styles.notificationButton, { opacity: isLoadingNow ? 0.6 : 1 }]}
+        onPress={triggerNotificationNow}
+        disabled={isLoadingNow}
+      >
+        {isLoadingNow ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
           <Text style={styles.buttonText}>Send Notification Now</Text>
-          {isLoading && <ActivityIndicator size="small" color="#000" style={styles.loader} />}
-        </TouchableOpacity>
+        )}
+      </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.button, isLoading && styles.buttonDisabled]}
-          onPress={triggerNotificationDelayed}
-          disabled={isLoading}
-        >
+      <TouchableOpacity
+        style={[styles.notificationButton, { opacity: isLoadingDelayed ? 0.6 : 1 }]}
+        onPress={triggerNotificationDelayed}
+        disabled={isLoadingDelayed}
+      >
+        {isLoadingDelayed ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
           <Text style={styles.buttonText}>Send Notification in 5s</Text>
-          {isLoading && <ActivityIndicator size="small" color="#000" style={styles.loader} />}
-        </TouchableOpacity>
-
-        {statusMessage ? (
-          <Text style={styles.statusText}>{statusMessage}</Text>
-        ) : null}
-      </View>
+        )}
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 32,
+  },
+  statusMessage: {
+    fontSize: 16,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  notificationButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    minWidth: 250,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
