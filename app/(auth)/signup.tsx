@@ -12,163 +12,96 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
-import { HapticFeedback } from "@/utils/haptics";
 import { IconSymbol } from "@/components/IconSymbol";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignupScreen() {
   const { signUpWithEmail } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleSignup = async () => {
-    if (!name || !email || !password || !confirmPassword) {
+    if (!name || !email || !password) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
 
-    if (password.length < 8) {
-      Alert.alert("Error", "Password must be at least 8 characters");
-      return;
-    }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      await HapticFeedback.light();
       await signUpWithEmail(email, password, name);
-      await HapticFeedback.success();
-      router.replace("/(tabs)");
+      Alert.alert("Success", "Account created successfully!", [
+        { text: "OK", onPress: () => router.replace("/(tabs)/profile") },
+      ]);
     } catch (error: any) {
-      await HapticFeedback.error();
-      Alert.alert("Signup Failed", error.message || "Could not create account");
+      console.error("Signup error:", error);
+      Alert.alert(
+        "Signup Failed",
+        error.message || "Could not create account. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.content}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <IconSymbol 
-                ios_icon_name="chevron.left" 
-                android_material_icon_name="arrow-back" 
-                size={24} 
-                color="#007AFF" 
-              />
-            </TouchableOpacity>
-
             <View style={styles.header}>
-              <IconSymbol 
-                ios_icon_name="person.crop.circle.badge.plus" 
-                android_material_icon_name="person-add" 
-                size={60} 
-                color="#007AFF" 
+              <IconSymbol
+                ios_icon_name="person.badge.plus.fill"
+                android_material_icon_name="person-add"
+                size={80}
+                color="#007AFF"
               />
               <Text style={styles.title}>Create Account</Text>
               <Text style={styles.subtitle}>Sign up to get started</Text>
             </View>
 
             <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <IconSymbol 
-                  ios_icon_name="person.fill" 
-                  android_material_icon_name="person" 
-                  size={20} 
-                  color="#8E8E93" 
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Full Name"
-                  value={name}
-                  onChangeText={setName}
-                  autoCapitalize="words"
-                  autoComplete="name"
-                  placeholderTextColor="#8E8E93"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <IconSymbol 
-                  ios_icon_name="envelope.fill" 
-                  android_material_icon_name="email" 
-                  size={20} 
-                  color="#8E8E93" 
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Email"
-                  value={email}
-                  onChangeText={setEmail}
-                  autoCapitalize="none"
-                  keyboardType="email-address"
-                  autoComplete="email"
-                  placeholderTextColor="#8E8E93"
-                />
-              </View>
-
-              <View style={styles.inputContainer}>
-                <IconSymbol 
-                  ios_icon_name="lock.fill" 
-                  android_material_icon_name="lock" 
-                  size={20} 
-                  color="#8E8E93" 
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Password"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!showPassword}
-                  autoComplete="password-new"
-                  placeholderTextColor="#8E8E93"
-                />
-                <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                  <IconSymbol
-                    ios_icon_name={showPassword ? "eye.slash.fill" : "eye.fill"}
-                    android_material_icon_name={showPassword ? "visibility-off" : "visibility"}
-                    size={20}
-                    color="#8E8E93"
-                  />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.inputContainer}>
-                <IconSymbol 
-                  ios_icon_name="lock.fill" 
-                  android_material_icon_name="lock" 
-                  size={20} 
-                  color="#8E8E93" 
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Confirm Password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  secureTextEntry={!showPassword}
-                  autoComplete="password-new"
-                  placeholderTextColor="#8E8E93"
-                />
-              </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Full Name"
+                placeholderTextColor="#999"
+                value={name}
+                onChangeText={setName}
+                editable={!loading}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="#999"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                editable={!loading}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password (min 6 characters)"
+                placeholderTextColor="#999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                editable={!loading}
+              />
 
               <TouchableOpacity
                 style={[styles.button, loading && styles.buttonDisabled]}
@@ -178,16 +111,16 @@ export default function SignupScreen() {
                 {loading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.buttonText}>Create Account</Text>
+                  <Text style={styles.buttonText}>Sign Up</Text>
                 )}
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.linkButton}
                 onPress={() => router.back()}
+                disabled={loading}
               >
                 <Text style={styles.linkText}>
-                  Already have an account? <Text style={styles.linkTextBold}>Sign In</Text>
+                  Already have an account? Sign In
                 </Text>
               </TouchableOpacity>
             </View>
@@ -211,52 +144,39 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 24,
+    padding: 20,
     justifyContent: "center",
-  },
-  backButton: {
-    position: "absolute",
-    top: 16,
-    left: 24,
-    zIndex: 1,
   },
   header: {
     alignItems: "center",
-    marginBottom: 48,
+    marginBottom: 40,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "700",
+    fontSize: 28,
+    fontWeight: "bold",
+    marginTop: 20,
     color: "#000",
-    marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: "#8E8E93",
+    color: "#666",
     marginTop: 8,
   },
   form: {
     gap: 16,
   },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F2F2F7",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    height: 56,
-    gap: 12,
-  },
   input: {
-    flex: 1,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    padding: 16,
     fontSize: 16,
-    color: "#000",
+    backgroundColor: "#f9f9f9",
   },
   button: {
     backgroundColor: "#007AFF",
-    borderRadius: 12,
-    height: 56,
-    justifyContent: "center",
+    padding: 16,
+    borderRadius: 8,
     alignItems: "center",
     marginTop: 8,
   },
@@ -265,19 +185,13 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: "600",
-  },
-  linkButton: {
-    alignItems: "center",
-    marginTop: 16,
   },
   linkText: {
-    fontSize: 15,
-    color: "#8E8E93",
-  },
-  linkTextBold: {
     color: "#007AFF",
-    fontWeight: "600",
+    textAlign: "center",
+    fontSize: 14,
+    marginTop: 8,
   },
 });
