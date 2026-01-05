@@ -1,8 +1,7 @@
-
 {
   "expo": {
-    "name": "Natively",
-    "slug": "Natively",
+    "name": "Video Journal",
+    "slug": "Video Journal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/natively-dark.png",
@@ -23,7 +22,9 @@
         "NSMicrophoneUsageDescription": "We need microphone access to record audio with videos"
       },
       "entitlements": {
-        "com.apple.developer.associated-domains": ["applinks:natively.app"]
+        "com.apple.developer.associated-domains": [
+          "applinks:natively.app"
+        ]
       }
     },
     "android": {
@@ -67,5 +68,6 @@
       "router": {},
       "backendUrl": "https://placeholder-backend.com"
     }
-  }
+  },
+  "scheme": "Video Journal"
 }

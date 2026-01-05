@@ -14,8 +14,6 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
-import * as LocalAuthentication from "expo-local-authentication";
-import * as SecureStore from "expo-secure-store";
 import { HapticFeedback } from "@/utils/haptics";
 import { IconSymbol } from "@/components/IconSymbol";
 
@@ -36,17 +34,6 @@ export default function LoginScreen() {
       setLoading(true);
       await HapticFeedback.light();
       await signInWithEmail(email, password);
-
-      // Check if biometric is available
-      const compatible = await LocalAuthentication.hasHardwareAsync();
-      const enrolled = await LocalAuthentication.isEnrolledAsync();
-
-      if (compatible && enrolled) {
-        // Store credentials for biometric unlock
-        await SecureStore.setItemAsync("user_email", email);
-        await SecureStore.setItemAsync("biometric_enabled", "true");
-      }
-
       await HapticFeedback.success();
       router.replace("/(tabs)");
     } catch (error: any) {
