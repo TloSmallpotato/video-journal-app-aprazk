@@ -1,15 +1,17 @@
 
-import { HapticFeedback } from "@/utils/haptics";
-import { router } from "expo-router";
 import React from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { View, Text, StyleSheet, Platform, TouchableOpacity, useColorScheme, Alert, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Platform, TouchableOpacity, useColorScheme, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useAuth } from "@/contexts/AuthContext";
 import { IconSymbol } from "@/components/IconSymbol";
+import { router } from "expo-router";
+import { HapticFeedback } from "@/utils/haptics";
+import * as SecureStore from "expo-secure-store";
 
 export default function ProfileScreen() {
+  const { user, signOut } = useAuth();
   const colorScheme = useColorScheme();
-  const { user, signOut, loading } = useAuth();
+  const isDark = colorScheme === 'dark';
 
   const handleLogout = async () => {
     Alert.alert(
@@ -24,237 +26,235 @@ export default function ProfileScreen() {
           text: "Sign Out",
           style: "destructive",
           onPress: async () => {
-            try {
-              await HapticFeedback.light();
-              await signOut();
-              await HapticFeedback.success();
-              router.replace("/(auth)/login");
-            } catch (error) {
-              await HapticFeedback.error();
-              console.error("Logout error:", error);
-              Alert.alert("Error", "Failed to sign out. Please try again.");
-            }
+            await HapticFeedback.medium();
+            await signOut();
+            // Clear biometric settings
+            await SecureStore.deleteItemAsync("biometric_enabled");
+            await SecureStore.deleteItemAsync("user_email");
+            await HapticFeedback.success();
+            router.replace("/(auth)/login");
           },
         },
       ]
     );
   };
 
-  const handleNavigateToSearch = async () => {
-    await HapticFeedback.light();
-    router.push("/search");
+  const handleNavigateToSearch = () => {
+    HapticFeedback.medium();
+    router.push('/search');
   };
 
-  const isDark = colorScheme === "dark";
-
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: isDark ? "#000" : "#fff" }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <IconSymbol
-            ios_icon_name="person.circle.fill"
-            android_material_icon_name="account-circle"
-            size={100}
-            color="#007AFF"
-          />
-          <Text style={[styles.title, { color: isDark ? "#fff" : "#000" }]}>Profile</Text>
+    <SafeAreaView 
+      style={[styles.safeArea, { backgroundColor: isDark ? '#1a1a2e' : '#F5F1ED' }]} 
+      edges={['top']}
+    >
+      <View style={styles.container}>
+        <Text style={[styles.title, isDark && styles.titleDark]}>Profile</Text>
+        
+        <View style={styles.infoContainer}>
           {user && (
-            <View style={styles.userInfo}>
-              <Text style={[styles.userName, { color: isDark ? "#fff" : "#000" }]}>
-                {user.user_metadata?.name || user.email?.split("@")[0] || "User"}
+            <View style={[styles.infoCard, isDark && styles.infoCardDark]}>
+              <IconSymbol
+                ios_icon_name="person.circle.fill"
+                android_material_icon_name="account-circle"
+                size={64}
+                color={isDark ? '#4A47A3' : '#2E2A8B'}
+              />
+              <Text style={[styles.userName, isDark && styles.userNameDark]}>
+                {user.name || "User"}
               </Text>
-              <Text style={[styles.userEmail, { color: isDark ? "#999" : "#666" }]}>
+              <Text style={[styles.userEmail, isDark && styles.userEmailDark]}>
                 {user.email}
               </Text>
-              <View style={styles.badge}>
-                <IconSymbol
-                  ios_icon_name="checkmark.circle.fill"
-                  android_material_icon_name="check-circle"
-                  size={16}
-                  color="#34C759"
-                />
-                <Text style={styles.badgeText}>Verified</Text>
-              </View>
             </View>
           )}
-        </View>
 
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={[styles.menuItem, { backgroundColor: isDark ? "#1C1C1E" : "#F2F2F7" }]}
-            onPress={handleNavigateToSearch}
-          >
-            <View style={styles.menuItemLeft}>
-              <IconSymbol
-                ios_icon_name="magnifyingglass"
-                android_material_icon_name="search"
-                size={24}
-                color="#007AFF"
-              />
-              <Text style={[styles.menuItemText, { color: isDark ? "#fff" : "#000" }]}>
-                Search & Notifications
-              </Text>
-            </View>
+          <View style={[styles.infoCard, isDark && styles.infoCardDark]}>
             <IconSymbol
-              ios_icon_name="chevron.right"
-              android_material_icon_name="chevron-right"
-              size={20}
-              color={isDark ? "#666" : "#999"}
+              ios_icon_name="lock.shield.fill"
+              android_material_icon_name="security"
+              size={32}
+              color={isDark ? '#4A47A3' : '#2E2A8B'}
             />
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: isDark ? "#999" : "#666" }]}>
-            Account Information
-          </Text>
-          <View style={[styles.infoCard, { backgroundColor: isDark ? "#1C1C1E" : "#F2F2F7" }]}>
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: isDark ? "#999" : "#666" }]}>
-                User ID
-              </Text>
-              <Text style={[styles.infoValue, { color: isDark ? "#fff" : "#000" }]} numberOfLines={1}>
-                {user?.id?.substring(0, 8)}...
-              </Text>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: isDark ? "#999" : "#666" }]}>
-                Created
-              </Text>
-              <Text style={[styles.infoValue, { color: isDark ? "#fff" : "#000" }]}>
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString() : "N/A"}
-              </Text>
+            <Text style={[styles.infoTitle, isDark && styles.infoTitleDark]}>
+              Biometric Security
+            </Text>
+            <Text style={[styles.infoText, isDark && styles.infoTextDark]}>
+              Face ID / Touch ID enabled for quick unlock
+            </Text>
+            <View style={styles.badge}>
+              <IconSymbol
+                ios_icon_name="checkmark.circle.fill"
+                android_material_icon_name="check-circle"
+                size={16}
+                color="#34C759"
+              />
+              <Text style={styles.badgeText}>Protected</Text>
             </View>
           </View>
-        </View>
 
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-          disabled={loading}
-        >
-          <IconSymbol
-            ios_icon_name="arrow.right.square.fill"
-            android_material_icon_name="logout"
-            size={20}
-            color="#fff"
-          />
-          <Text style={styles.logoutButtonText}>Sign Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity
+            style={[styles.logoutButton, isDark && styles.logoutButtonDark]}
+            onPress={handleLogout}
+          >
+            <IconSymbol
+              ios_icon_name="arrow.right.square.fill"
+              android_material_icon_name="logout"
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.logoutButtonText}>Sign Out</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.searchButton, isDark && styles.searchButtonDark]}
+            onPress={handleNavigateToSearch}
+          >
+            <IconSymbol
+              ios_icon_name="magnifyingglass"
+              android_material_icon_name="search"
+              size={20}
+              color="#FFFFFF"
+            />
+            <Text style={styles.searchButtonText}>To Search Page</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    paddingTop: Platform.OS === "android" ? 48 : 0,
-  },
-  scrollContent: {
-    padding: 24,
-  },
-  header: {
-    alignItems: "center",
-    marginBottom: 32,
+    paddingTop: Platform.OS === 'android' ? 48 : 20,
+    paddingHorizontal: 24,
+    paddingBottom: 100,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    marginTop: 16,
+    fontSize: 48,
+    fontWeight: 'bold',
+    color: '#2E2A8B',
+    marginBottom: 32,
   },
-  userInfo: {
-    alignItems: "center",
-    marginTop: 16,
+  titleDark: {
+    color: '#FFFFFF',
+  },
+  infoContainer: {
+    gap: 16,
+  },
+  infoCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  infoCardDark: {
+    backgroundColor: '#2a2a3e',
   },
   userName: {
     fontSize: 24,
-    fontWeight: "600",
-    marginBottom: 4,
+    fontWeight: '700',
+    color: '#2E2A8B',
+    marginTop: 16,
+  },
+  userNameDark: {
+    color: '#FFFFFF',
   },
   userEmail: {
     fontSize: 16,
-    marginBottom: 12,
+    color: '#666666',
+    marginTop: 4,
+  },
+  userEmailDark: {
+    color: '#CCCCCC',
+  },
+  infoTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#2E2A8B',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  infoTitleDark: {
+    color: '#FFFFFF',
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#666666',
+    textAlign: 'center',
+  },
+  infoTextDark: {
+    color: '#CCCCCC',
   },
   badge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(52, 199, 89, 0.1)",
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    backgroundColor: 'rgba(52, 199, 89, 0.1)',
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
-    gap: 6,
+    borderRadius: 12,
   },
   badgeText: {
-    color: "#34C759",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
-  menuItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: 16,
-    borderRadius: 12,
-  },
-  menuItemLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  menuItemText: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  infoCard: {
-    borderRadius: 12,
-    padding: 16,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  infoLabel: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  infoValue: {
-    fontSize: 16,
-    flex: 1,
-    textAlign: "right",
-    marginLeft: 16,
-  },
-  infoDivider: {
-    height: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    marginVertical: 4,
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#34C759',
   },
   logoutButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#FF3B30",
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-    gap: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF3B30',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  logoutButtonDark: {
+    backgroundColor: '#FF453A',
   },
   logoutButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "600",
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  searchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#34C759',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    gap: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  searchButtonDark: {
+    backgroundColor: '#2ECC71',
+  },
+  searchButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -11,76 +11,102 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { HapticFeedback } from "@/utils/haptics";
 import { IconSymbol } from "@/components/IconSymbol";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
   const { signInWithEmail } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      Alert.alert("Error", "Please enter email and password");
       return;
     }
 
-    setLoading(true);
     try {
+      setLoading(true);
+      await HapticFeedback.light();
       await signInWithEmail(email, password);
-      router.replace("/(tabs)/profile");
+      await HapticFeedback.success();
+      router.replace("/(tabs)");
     } catch (error: any) {
-      console.error("Login error:", error);
-      Alert.alert(
-        "Login Failed",
-        error.message || "Invalid email or password. Please try again."
-      );
+      await HapticFeedback.error();
+      Alert.alert("Login Failed", error.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <IconSymbol
-              ios_icon_name="person.circle.fill"
-              android_material_icon_name="person"
-              size={80}
-              color="#007AFF"
+            <IconSymbol 
+              ios_icon_name="video.fill" 
+              android_material_icon_name="videocam" 
+              size={60} 
+              color="#007AFF" 
             />
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
           </View>
 
           <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#999"
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              editable={!loading}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#999"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-            />
+            <View style={styles.inputContainer}>
+              <IconSymbol 
+                ios_icon_name="envelope.fill" 
+                android_material_icon_name="email" 
+                size={20} 
+                color="#8E8E93" 
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+                autoComplete="email"
+                placeholderTextColor="#8E8E93"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <IconSymbol 
+                ios_icon_name="lock.fill" 
+                android_material_icon_name="lock" 
+                size={20} 
+                color="#8E8E93" 
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                autoComplete="password"
+                placeholderTextColor="#8E8E93"
+              />
+              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+                <IconSymbol
+                  ios_icon_name={showPassword ? "eye.slash.fill" : "eye.fill"}
+                  android_material_icon_name={showPassword ? "visibility-off" : "visibility"}
+                  size={20}
+                  color="#8E8E93"
+                />
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               style={[styles.button, loading && styles.buttonDisabled]}
@@ -95,11 +121,11 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              style={styles.linkButton}
               onPress={() => router.push("/(auth)/signup")}
-              disabled={loading}
             >
               <Text style={styles.linkText}>
-                Don't have an account? Sign Up
+                Don&apos;t have an account? <Text style={styles.linkTextBold}>Sign Up</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -119,39 +145,46 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
+    padding: 24,
     justifyContent: "center",
   },
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 48,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginTop: 20,
+    fontSize: 32,
+    fontWeight: "700",
     color: "#000",
+    marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
+    color: "#8E8E93",
     marginTop: 8,
   },
   form: {
     gap: 16,
   },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F2F2F7",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 56,
+    gap: 12,
+  },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 16,
+    flex: 1,
     fontSize: 16,
-    backgroundColor: "#f9f9f9",
+    color: "#000",
   },
   button: {
     backgroundColor: "#007AFF",
-    padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
+    height: 56,
+    justifyContent: "center",
     alignItems: "center",
     marginTop: 8,
   },
@@ -160,13 +193,19 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "600",
   },
+  linkButton: {
+    alignItems: "center",
+    marginTop: 16,
+  },
   linkText: {
+    fontSize: 15,
+    color: "#8E8E93",
+  },
+  linkTextBold: {
     color: "#007AFF",
-    textAlign: "center",
-    fontSize: 14,
-    marginTop: 8,
+    fontWeight: "600",
   },
 });

@@ -17,6 +17,7 @@
       "bundleIdentifier": "com.anonymous.Natively",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSFaceIDUsageDescription": "We use Face ID to securely authenticate you",
         "NSCameraUsageDescription": "We need camera access to record videos",
         "NSMicrophoneUsageDescription": "We need microphone access to record audio with videos"
       },
@@ -49,6 +50,7 @@
           "color": "#ffffff"
         }
       ],
+      "expo-local-authentication",
       [
         "expo-camera",
         {
@@ -64,7 +66,7 @@
     },
     "extra": {
       "router": {},
-      "backendUrl": ""
+      "backendUrl": "https://placeholder-backend.com"
     }
   },
   "scheme": "Video Journal"

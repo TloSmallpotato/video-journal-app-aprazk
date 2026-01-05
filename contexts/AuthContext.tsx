@@ -1,11 +1,9 @@
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
-import { supabase } from "@/app/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
+import { authClient } from "@/lib/auth-client";
 
 interface AuthContextType {
-  user: User | null;
-  session: Session | null;
+  user: any;
   loading: boolean;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
@@ -15,51 +13,46 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  // Safely use the session hook with error handling
+  let session: any = { data: null, isPending: false, error: null };
+  
+  try {
+    // Only call useSession if we're in a runtime environment (not during build)
+    if (typeof window !== 'undefined' || typeof global !== 'undefined') {
+      session = authClient.useSession();
+    }
+  } catch (error) {
+    console.log("Auth session hook error (backend not configured):", error);
+  }
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Initial session:", session?.user?.email || "No session");
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("Auth state changed:", _event, session?.user?.email || "No session");
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    if (session?.data?.user) {
+      setUser(session.data.user);
+    }
+  }, [session?.data?.user]);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
       setLoading(true);
-      console.log("Attempting sign in with:", email);
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // TODO: Backend Integration - Call BetterAuth sign-in endpoint
+      const result = await authClient.signIn.email({
         email,
         password,
       });
 
-      if (error) {
-        console.error("Sign in error:", error);
-        throw new Error(error.message);
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to sign in");
       }
       
-      console.log("Sign in successful:", data.user?.email);
-      setUser(data.user);
-      setSession(data.session);
+      if (result.data?.user) {
+        setUser(result.data.user);
+      }
     } catch (error: any) {
       console.error("Sign in error:", error);
-      throw error;
+      throw new Error(error.message || "Failed to sign in. Please check your backend configuration.");
     } finally {
       setLoading(false);
     }
@@ -68,35 +61,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUpWithEmail = async (email: string, password: string, name: string) => {
     try {
       setLoading(true);
-      console.log("Attempting sign up with:", email);
-      
-      const { data, error } = await supabase.auth.signUp({
+      // TODO: Backend Integration - Call BetterAuth sign-up endpoint
+      const result = await authClient.signUp.email({
         email,
         password,
-        options: {
-          data: {
-            name: name,
-          },
-        },
+        name,
       });
 
-      if (error) {
-        console.error("Sign up error:", error);
-        throw new Error(error.message);
+      if (result.error) {
+        throw new Error(result.error.message || "Failed to sign up");
       }
       
-      console.log("Sign up successful:", data.user?.email);
-      
-      // Check if email confirmation is required
-      if (data.user && !data.session) {
-        throw new Error("Please check your email to confirm your account before signing in.");
+      if (result.data?.user) {
+        setUser(result.data.user);
       }
-      
-      setUser(data.user);
-      setSession(data.session);
     } catch (error: any) {
       console.error("Sign up error:", error);
-      throw error;
+      throw new Error(error.message || "Failed to sign up. Please check your backend configuration.");
     } finally {
       setLoading(false);
     }
@@ -105,14 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      console.log("Signing out");
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error("Sign out error:", error);
-        throw error;
-      }
+      // TODO: Backend Integration - Call BetterAuth sign-out endpoint
+      await authClient.signOut();
       setUser(null);
-      setSession(null);
     } catch (error) {
       console.error("Sign out error:", error);
     } finally {
@@ -123,9 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
-        session,
-        loading,
+        user: user || session?.data?.user,
+        loading: loading || session?.isPending || false,
         signInWithEmail,
         signUpWithEmail,
         signOut,
