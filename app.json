@@ -1,3 +1,4 @@
+
 {
   "expo": {
     "name": "Video Journal",
@@ -66,6 +67,5 @@
       "router": {},
       "backendUrl": ""
     }
-  },
-  "scheme": "Video Journal"
+  }
 }

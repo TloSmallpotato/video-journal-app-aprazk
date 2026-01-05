@@ -1,5 +1,6 @@
 
-import React, { useState } from "react";
+import { HapticFeedback } from "@/utils/haptics";
+import { router } from "expo-router";
 import {
   View,
   Text,
@@ -12,48 +13,64 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { router } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
-import { IconSymbol } from "@/components/IconSymbol";
 import { SafeAreaView } from "react-native-safe-area-context";
+import React, { useState } from "react";
+import { IconSymbol } from "@/components/IconSymbol";
 
 export default function SignupScreen() {
-  const { signUpWithEmail } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUpWithEmail } = useAuth();
 
   const handleSignup = async () => {
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters");
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
       return;
     }
 
-    setLoading(true);
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters long");
+      return;
+    }
+
     try {
+      setIsLoading(true);
+      await HapticFeedback("light");
       await signUpWithEmail(email, password, name);
-      Alert.alert("Success", "Account created successfully!", [
-        { text: "OK", onPress: () => router.replace("/(tabs)/profile") },
-      ]);
+      await HapticFeedback("success");
+      Alert.alert(
+        "Success", 
+        "Account created successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => router.replace("/(tabs)/profile"),
+          },
+        ]
+      );
     } catch (error: any) {
+      await HapticFeedback("error");
       console.error("Signup error:", error);
       Alert.alert(
-        "Signup Failed",
-        error.message || "Could not create account. Please try again."
+        "Signup Failed", 
+        error.message || "Failed to create account. Please try again."
       );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -65,7 +82,7 @@ export default function SignupScreen() {
           <View style={styles.content}>
             <View style={styles.header}>
               <IconSymbol
-                ios_icon_name="person.badge.plus.fill"
+                ios_icon_name="person.crop.circle.badge.plus"
                 android_material_icon_name="person-add"
                 size={80}
                 color="#007AFF"
@@ -75,40 +92,89 @@ export default function SignupScreen() {
             </View>
 
             <View style={styles.form}>
-              <TextInput
-                style={styles.input}
-                placeholder="Full Name"
-                placeholderTextColor="#999"
-                value={name}
-                onChangeText={setName}
-                editable={!loading}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Email"
-                placeholderTextColor="#999"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-                editable={!loading}
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Password (min 6 characters)"
-                placeholderTextColor="#999"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                editable={!loading}
-              />
+              <View style={styles.inputContainer}>
+                <IconSymbol
+                  ios_icon_name="person.fill"
+                  android_material_icon_name="person"
+                  size={20}
+                  color="#666"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full Name"
+                  placeholderTextColor="#666"
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                  editable={!isLoading}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <IconSymbol
+                  ios_icon_name="envelope.fill"
+                  android_material_icon_name="email"
+                  size={20}
+                  color="#666"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email"
+                  placeholderTextColor="#666"
+                  value={email}
+                  onChangeText={setEmail}
+                  autoCapitalize="none"
+                  keyboardType="email-address"
+                  editable={!isLoading}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <IconSymbol
+                  ios_icon_name="lock.fill"
+                  android_material_icon_name="lock"
+                  size={20}
+                  color="#666"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password (min 6 characters)"
+                  placeholderTextColor="#666"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  editable={!isLoading}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <IconSymbol
+                  ios_icon_name="lock.fill"
+                  android_material_icon_name="lock"
+                  size={20}
+                  color="#666"
+                  style={styles.inputIcon}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  placeholderTextColor="#666"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry
+                  editable={!isLoading}
+                />
+              </View>
 
               <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
+                style={[styles.button, isLoading && styles.buttonDisabled]}
                 onPress={handleSignup}
-                disabled={loading}
+                disabled={isLoading}
               >
-                {loading ? (
+                {isLoading ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
                   <Text style={styles.buttonText}>Sign Up</Text>
@@ -116,11 +182,12 @@ export default function SignupScreen() {
               </TouchableOpacity>
 
               <TouchableOpacity
+                style={styles.linkButton}
                 onPress={() => router.back()}
-                disabled={loading}
+                disabled={isLoading}
               >
                 <Text style={styles.linkText}>
-                  Already have an account? Sign In
+                  Already have an account? <Text style={styles.linkTextBold}>Sign In</Text>
                 </Text>
               </TouchableOpacity>
             </View>
@@ -134,7 +201,7 @@ export default function SignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#000",
   },
   keyboardView: {
     flex: 1,
@@ -144,18 +211,19 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 20,
     justifyContent: "center",
+    paddingHorizontal: 24,
+    paddingVertical: 24,
   },
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 32,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "bold",
-    marginTop: 20,
-    color: "#000",
+    color: "#fff",
+    marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
@@ -163,20 +231,30 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   form: {
-    gap: 16,
+    width: "100%",
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1C1C1E",
+    borderRadius: 12,
+    marginBottom: 16,
+    paddingHorizontal: 16,
+    height: 56,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 16,
+    flex: 1,
+    color: "#fff",
     fontSize: 16,
-    backgroundColor: "#f9f9f9",
   },
   button: {
     backgroundColor: "#007AFF",
-    padding: 16,
-    borderRadius: 8,
+    borderRadius: 12,
+    height: 56,
+    justifyContent: "center",
     alignItems: "center",
     marginTop: 8,
   },
@@ -185,13 +263,19 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "600",
   },
+  linkButton: {
+    marginTop: 24,
+    alignItems: "center",
+  },
   linkText: {
-    color: "#007AFF",
-    textAlign: "center",
+    color: "#666",
     fontSize: 14,
-    marginTop: 8,
+  },
+  linkTextBold: {
+    color: "#007AFF",
+    fontWeight: "600",
   },
 });

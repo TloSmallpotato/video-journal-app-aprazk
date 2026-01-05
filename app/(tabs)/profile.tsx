@@ -25,12 +25,12 @@ export default function ProfileScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await HapticFeedback.light();
+              await HapticFeedback("light");
               await signOut();
-              await HapticFeedback.success();
+              await HapticFeedback("success");
               router.replace("/(auth)/login");
             } catch (error) {
-              await HapticFeedback.error();
+              await HapticFeedback("error");
               console.error("Logout error:", error);
               Alert.alert("Error", "Failed to sign out. Please try again.");
             }
@@ -41,7 +41,7 @@ export default function ProfileScreen() {
   };
 
   const handleNavigateToSearch = async () => {
-    await HapticFeedback.light();
+    await HapticFeedback("light");
     router.push("/search");
   };
 
