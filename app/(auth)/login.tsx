@@ -1,5 +1,8 @@
 
-import React, { useState } from "react";
+import { HapticFeedback } from "@/utils/haptics";
+import { router } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
@@ -11,36 +14,36 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
-import { useAuth } from "@/contexts/AuthContext";
-import { HapticFeedback } from "@/utils/haptics";
+import React, { useState } from "react";
 import { IconSymbol } from "@/components/IconSymbol";
 
 export default function LoginScreen() {
-  const { signInWithEmail } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signInWithEmail } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please enter email and password");
+      Alert.alert("Error", "Please enter both email and password");
       return;
     }
 
     try {
-      setLoading(true);
-      await HapticFeedback.light();
+      setIsLoading(true);
+      await HapticFeedback("light");
       await signInWithEmail(email, password);
-      await HapticFeedback.success();
-      router.replace("/(tabs)");
+      await HapticFeedback("success");
+      router.replace("/(tabs)/profile");
     } catch (error: any) {
-      await HapticFeedback.error();
-      Alert.alert("Login Failed", error.message || "Invalid credentials");
+      await HapticFeedback("error");
+      console.error("Login error:", error);
+      Alert.alert(
+        "Login Failed", 
+        error.message || "Invalid email or password. Please try again."
+      );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -52,11 +55,11 @@ export default function LoginScreen() {
       >
         <View style={styles.content}>
           <View style={styles.header}>
-            <IconSymbol 
-              ios_icon_name="video.fill" 
-              android_material_icon_name="videocam" 
-              size={60} 
-              color="#007AFF" 
+            <IconSymbol
+              ios_icon_name="person.circle.fill"
+              android_material_icon_name="account-circle"
+              size={80}
+              color="#007AFF"
             />
             <Text style={styles.title}>Welcome Back</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
@@ -64,56 +67,50 @@ export default function LoginScreen() {
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <IconSymbol 
-                ios_icon_name="envelope.fill" 
-                android_material_icon_name="email" 
-                size={20} 
-                color="#8E8E93" 
+              <IconSymbol
+                ios_icon_name="envelope.fill"
+                android_material_icon_name="email"
+                size={20}
+                color="#666"
+                style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Email"
+                placeholderTextColor="#666"
                 value={email}
                 onChangeText={setEmail}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                autoComplete="email"
-                placeholderTextColor="#8E8E93"
+                editable={!isLoading}
               />
             </View>
 
             <View style={styles.inputContainer}>
-              <IconSymbol 
-                ios_icon_name="lock.fill" 
-                android_material_icon_name="lock" 
-                size={20} 
-                color="#8E8E93" 
+              <IconSymbol
+                ios_icon_name="lock.fill"
+                android_material_icon_name="lock"
+                size={20}
+                color="#666"
+                style={styles.inputIcon}
               />
               <TextInput
                 style={styles.input}
                 placeholder="Password"
+                placeholderTextColor="#666"
                 value={password}
                 onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                autoComplete="password"
-                placeholderTextColor="#8E8E93"
+                secureTextEntry
+                editable={!isLoading}
               />
-              <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <IconSymbol
-                  ios_icon_name={showPassword ? "eye.slash.fill" : "eye.fill"}
-                  android_material_icon_name={showPassword ? "visibility-off" : "visibility"}
-                  size={20}
-                  color="#8E8E93"
-                />
-              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
-              style={[styles.button, loading && styles.buttonDisabled]}
+              style={[styles.button, isLoading && styles.buttonDisabled]}
               onPress={handleLogin}
-              disabled={loading}
+              disabled={isLoading}
             >
-              {loading ? (
+              {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
                 <Text style={styles.buttonText}>Sign In</Text>
@@ -123,6 +120,7 @@ export default function LoginScreen() {
             <TouchableOpacity
               style={styles.linkButton}
               onPress={() => router.push("/(auth)/signup")}
+              disabled={isLoading}
             >
               <Text style={styles.linkText}>
                 Don&apos;t have an account? <Text style={styles.linkTextBold}>Sign Up</Text>
@@ -138,15 +136,15 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#000",
   },
   keyboardView: {
     flex: 1,
   },
   content: {
     flex: 1,
-    padding: 24,
     justifyContent: "center",
+    paddingHorizontal: 24,
   },
   header: {
     alignItems: "center",
@@ -154,31 +152,34 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: "700",
-    color: "#000",
+    fontWeight: "bold",
+    color: "#fff",
     marginTop: 16,
   },
   subtitle: {
     fontSize: 16,
-    color: "#8E8E93",
+    color: "#666",
     marginTop: 8,
   },
   form: {
-    gap: 16,
+    width: "100%",
   },
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F2F2F7",
+    backgroundColor: "#1C1C1E",
     borderRadius: 12,
+    marginBottom: 16,
     paddingHorizontal: 16,
     height: 56,
-    gap: 12,
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
     flex: 1,
+    color: "#fff",
     fontSize: 16,
-    color: "#000",
   },
   button: {
     backgroundColor: "#007AFF",
@@ -193,16 +194,16 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#fff",
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: "600",
   },
   linkButton: {
+    marginTop: 24,
     alignItems: "center",
-    marginTop: 16,
   },
   linkText: {
-    fontSize: 15,
-    color: "#8E8E93",
+    color: "#666",
+    fontSize: 14,
   },
   linkTextBold: {
     color: "#007AFF",
