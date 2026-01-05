@@ -16,11 +16,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
 
-  // Try to use the session hook, but handle errors gracefully
+  // Safely use the session hook with error handling
   let session: any = { data: null, isPending: false, error: null };
   
   try {
-    session = authClient.useSession();
+    // Only call useSession if we're in a runtime environment (not during build)
+    if (typeof window !== 'undefined' || typeof global !== 'undefined') {
+      session = authClient.useSession();
+    }
   } catch (error) {
     console.log("Auth session hook error (backend not configured):", error);
   }

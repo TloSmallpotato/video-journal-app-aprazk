@@ -18,11 +18,12 @@
       "bundleIdentifier": "com.anonymous.Natively",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSFaceIDUsageDescription": "We use Face ID to securely authenticate you and protect your data."
+        "NSFaceIDUsageDescription": "We use Face ID to securely authenticate you",
+        "NSCameraUsageDescription": "We need camera access to record videos",
+        "NSMicrophoneUsageDescription": "We need microphone access to record audio with videos"
       },
       "entitlements": {
-        "aps-environment": "development",
-        "com.apple.developer.usernotifications.time-sensitive": true
+        "com.apple.developer.associated-domains": ["applinks:natively.app"]
       }
     },
     "android": {
@@ -31,12 +32,7 @@
         "backgroundColor": "#000000"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.Natively",
-      "permissions": [
-        "USE_BIOMETRIC",
-        "USE_FINGERPRINT",
-        "POST_NOTIFICATIONS"
-      ]
+      "package": "com.anonymous.Natively"
     },
     "web": {
       "favicon": "./assets/images/final_quest_240x240.png",
@@ -47,17 +43,19 @@
       "expo-router",
       "expo-web-browser",
       [
-        "expo-local-authentication",
-        {
-          "faceIDPermission": "Allow Natively to use Face ID to authenticate you securely."
-        }
-      ],
-      [
         "expo-notifications",
         {
-          "icon": "./assets/images/natively-dark.png",
-          "color": "#000000",
-          "sounds": []
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#ffffff"
+        }
+      ],
+      "expo-local-authentication",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Natively to access your camera",
+          "microphonePermission": "Allow Natively to access your microphone",
+          "recordAudioAndroid": true
         }
       ]
     ],
@@ -67,7 +65,7 @@
     },
     "extra": {
       "router": {},
-      "backendUrl": "https://your-backend-url.com"
+      "backendUrl": "https://placeholder-backend.com"
     }
   }
 }
