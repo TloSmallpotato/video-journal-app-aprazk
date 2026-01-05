@@ -1,6 +1,5 @@
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
-import { authClient } from "@/lib/auth-client";
+import React, { createContext, useContext, ReactNode, useState } from "react";
 
 interface AuthContextType {
   user: any;
@@ -13,94 +12,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [loading, setLoading] = useState(false);
-  const [user, setUser] = useState<any>(null);
-
-  // Safely use the session hook with error handling
-  let session: any = { data: null, isPending: false, error: null };
-  
-  try {
-    // Only call useSession if we're in a runtime environment (not during build)
-    if (typeof window !== 'undefined' || typeof global !== 'undefined') {
-      session = authClient.useSession();
-    }
-  } catch (error) {
-    console.log("Auth session hook error (backend not configured):", error);
-  }
-
-  useEffect(() => {
-    if (session?.data?.user) {
-      setUser(session.data.user);
-    }
-  }, [session?.data?.user]);
+  // TESTING MODE: Mock user as always authenticated
+  const [user] = useState<any>({
+    id: "test-user-123",
+    email: "test@example.com",
+    name: "Test User",
+  });
+  const [loading] = useState(false);
 
   const signInWithEmail = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      // TODO: Backend Integration - Call BetterAuth sign-in endpoint
-      const result = await authClient.signIn.email({
-        email,
-        password,
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to sign in");
-      }
-      
-      if (result.data?.user) {
-        setUser(result.data.user);
-      }
-    } catch (error: any) {
-      console.error("Sign in error:", error);
-      throw new Error(error.message || "Failed to sign in. Please check your backend configuration.");
-    } finally {
-      setLoading(false);
-    }
+    console.log("Auth bypassed - signInWithEmail called but no-op for testing");
+    // No-op for testing
   };
 
   const signUpWithEmail = async (email: string, password: string, name: string) => {
-    try {
-      setLoading(true);
-      // TODO: Backend Integration - Call BetterAuth sign-up endpoint
-      const result = await authClient.signUp.email({
-        email,
-        password,
-        name,
-      });
-
-      if (result.error) {
-        throw new Error(result.error.message || "Failed to sign up");
-      }
-      
-      if (result.data?.user) {
-        setUser(result.data.user);
-      }
-    } catch (error: any) {
-      console.error("Sign up error:", error);
-      throw new Error(error.message || "Failed to sign up. Please check your backend configuration.");
-    } finally {
-      setLoading(false);
-    }
+    console.log("Auth bypassed - signUpWithEmail called but no-op for testing");
+    // No-op for testing
   };
 
   const signOut = async () => {
-    try {
-      setLoading(true);
-      // TODO: Backend Integration - Call BetterAuth sign-out endpoint
-      await authClient.signOut();
-      setUser(null);
-    } catch (error) {
-      console.error("Sign out error:", error);
-    } finally {
-      setLoading(false);
-    }
+    console.log("Auth bypassed - signOut called but no-op for testing");
+    // No-op for testing
   };
 
   return (
     <AuthContext.Provider
       value={{
-        user: user || session?.data?.user,
-        loading: loading || session?.isPending || false,
+        user,
+        loading,
         signInWithEmail,
         signUpWithEmail,
         signOut,
