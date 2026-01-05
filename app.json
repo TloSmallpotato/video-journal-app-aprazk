@@ -20,11 +20,6 @@
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "We need camera access to record videos",
         "NSMicrophoneUsageDescription": "We need microphone access to record audio with videos"
-      },
-      "entitlements": {
-        "com.apple.developer.associated-domains": [
-          "applinks:natively.app"
-        ]
       }
     },
     "android": {
